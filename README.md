@@ -17,7 +17,9 @@ npm run build:pages
 npm run preview:pages
 ```
 
-GitHub Pages 使用 `/neurosense-ai/` 子路径，首页与 `explore/index.html` 分别构建，直接访问或刷新工作区均可使用。构建输出为 `dist-pages/`。修改源码并推送到 `main` 后，由 GitHub Actions 自动构建发布。
+GitHub Pages 使用 `/neurosense-ai/` 子路径，首页与 `explore/index.html` 分别构建，直接访问或刷新工作区均可使用。构建输出为 `dist-pages/`。源码保存在 `main`，网页构建产物发布到 `gh-pages`，Pages 的发布来源设置为该分支根目录。
+
+更新网站时，先提交源码并推送到 `main`，再运行 `npm run deploy:pages`。此命令会重新构建并通过 `gh-pages` 工具推送网页，GitHub 随后自动发布。首次在另一台电脑使用时，先完成 GitHub 登录（`gh auth login`、`gh auth setup-git`）。不需要购买服务器或填写额外托管平台密钥。
 
 国内访问速度与可达性取决于运营商和当地网络，GitHub Pages 不提供中国大陆访问保证。此部署不需要另租服务器。
 
