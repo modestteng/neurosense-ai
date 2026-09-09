@@ -1,8 +1,27 @@
 # NeuroSense AI
 
-面向竞赛演示的多模态人因状态感知自适应交互平台。React + TypeScript + Vinext，部署为 Cloudflare Worker；现有 FastAPI 示例保留在 `backend/`，线上使用 `app/api/chat/route.ts`。
+面向竞赛演示的多模态人因状态感知自适应交互平台。React + TypeScript + Vinext，展示版部署于 GitHub Pages，完整服务保留 Cloudflare Workers 兼容运行时；现有 FastAPI 示例保留在 `backend/`，服务端接口位于 `app/api/chat/route.ts`。
 
-## 运行
+## 在线展示（GitHub Pages）
+
+- 网站：https://modestteng.github.io/neurosense-ai/
+- 工作区：https://modestteng.github.io/neurosense-ai/explore/
+- 公开源码：https://github.com/modestteng/neurosense-ai
+
+展示版完全在浏览器内运行，提供交互演示、模拟状态图表、摄像头本地预览、会话导出与 PDF/TXT/Markdown 文字提取；不提供 DeepSeek 在线生成和服务端 API。状态与回答的演示逻辑复用现有模块。页面、脚本、图片和 PDF Worker 均由本站提供，字体使用本机系统字体，不依赖 Google Fonts 或外部 CDN。浏览器语音识别仍取决于浏览器厂商服务和网络支持。
+
+```powershell
+npm ci
+npm run dev:pages
+npm run build:pages
+npm run preview:pages
+```
+
+GitHub Pages 使用 `/neurosense-ai/` 子路径，首页与 `explore/index.html` 分别构建，直接访问或刷新工作区均可使用。构建输出为 `dist-pages/`。修改源码并推送到 `main` 后，由 GitHub Actions 自动构建发布。
+
+国内访问速度与可达性取决于运营商和当地网络，GitHub Pages 不提供中国大陆访问保证。此部署不需要另租服务器。
+
+## 完整服务的本地运行
 
 ```powershell
 npm install
@@ -27,11 +46,11 @@ npm run dev
 
 ## 真实生成
 
-通过 Sites 的服务端环境变量设置 `DEEPSEEK_API_KEY`，`DEEPSEEK_MODEL` 默认为 `deepseek-v4-flash`。本地 Cloudflare 调试使用未跟踪的 `.dev.vars`（键名同 `.env.example`）；FastAPI 示例使用操作系统环境变量。禁止将密钥放到任何 `NEXT_PUBLIC_` 变量或客户端代码。
+完整服务通过服务端环境变量设置 `DEEPSEEK_API_KEY`，`DEEPSEEK_MODEL` 默认为 `deepseek-v4-flash`。本地 Cloudflare 调试使用未跟踪的 `.dev.vars`（键名同 `.env.example`）；FastAPI 示例使用操作系统环境变量。禁止将密钥放到任何 `NEXT_PUBLIC_` 变量或客户端代码。
 
 前端从 `GET /api/chat` 查询是否配置，通过 `POST /api/chat` 请求生成。后端校验输入、重算融合和策略、优先执行安全规则，再请求 DeepSeek。失败不会偷偷退回模拟并冒充真实回答。调用格式参考 [DeepSeek 官方接口文档](https://api-docs.deepseek.com/api/create-chat-completion/)。
 
-当前没有生产密钥，公开站点默认本地演示。配置密钥代表开放站点访客可能产生用量，请在正式开放真实生成前配置访问控制和部署层限流；当前仅有单实例每分钟请求限制，不能替代分布式配额。
+GitHub Pages 展示版使用本地演示，不配置生产密钥。配置密钥代表开放站点访客可能产生用量，请在正式开放真实生成前配置访问控制和部署层限流；当前仅有单实例每分钟请求限制，不能替代分布式配额。
 
 ## 技术边界与扩展
 
@@ -39,4 +58,4 @@ npm run dev
 
 `lib/neuro.ts` 是带类型的场景、对话分析、模拟感知、融合、策略与示例回答核心。模块独立，不向模型发送原始脑电。TCG-3DNet 图目前是架构示意与模拟结果，未实现或加载该论文模型的 PyTorch 权重。真正的脑电推理应由设备服务返回状态嵌入和动态边权，替换 `fuse` 的模拟输入；视觉服务同理。不要把模拟置信度当成经校准的识别准确率。
 
-`components/neuro/` 分离摄像头、动态脑图、响应呈现、设置、技术与历史视图。`services/knowledge.ts` 提取资料，`app/api/chat/route.ts` 执行服务器生成。旧版未使用的页面样式已清理。公开访问权限由 Sites 管理，项目 id 保留在 `.openai/hosting.json`。
+`components/neuro/` 分离摄像头、动态脑图、响应呈现、设置、技术与历史视图。`services/knowledge.ts` 提取资料，`app/api/chat/route.ts` 执行服务器生成。旧版未使用的页面样式已清理。旧 OpenAI Sites 部署关联已从源码移除；展示部署使用 GitHub Pages。完整服务端代码保留供后续扩展，不会打包进静态展示站。

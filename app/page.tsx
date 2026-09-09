@@ -2,12 +2,12 @@ import { ArrowUpRight, AudioLines, BrainCircuit, ScanEye } from 'lucide-react';
 import { EntranceAtmosphere } from '@/components/neuro/EntranceAtmosphere';
 import './entrance.css';
 
-export default function Home() {
+export default function Home({ basePath = '/' }: { basePath?: string }) {
   return (
     <main className="entrance">
       <EntranceAtmosphere />
       <header className="entrance-header">
-        <a className="entrance-brand" href="/" aria-label="NeuroSense AI 首页">
+        <a className="entrance-brand" href={basePath} aria-label="NeuroSense AI 首页">
           <AudioLines size={28} strokeWidth={1.5}/><span>NeuroSense <b>AI</b></span>
         </a>
         <span className="entrance-edition"><i/>交互演示版</span>
@@ -17,7 +17,7 @@ export default function Home() {
         <p className="entrance-eyebrow">多模态人因状态感知</p>
         <h1 id="entrance-title">不止理解你的问题。<br/><span>更懂此刻的你。</span></h1>
         <p className="entrance-description">从你说了什么，到你现在的状态。<br className="entrance-mobile-break"/>探索一种更有感知力的 AI 交互。</p>
-        <a className="explore-button" href="/explore"><span>开始探索</span><ArrowUpRight size={21} strokeWidth={1.7}/></a>
+        <a className="explore-button" href={`${basePath}explore/`}><span>开始探索</span><ArrowUpRight size={21} strokeWidth={1.7}/></a>
         <p className="entrance-permission">无需登录 · 进入后自主选择是否开启设备</p>
       </section>
 

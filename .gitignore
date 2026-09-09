@@ -41,3 +41,5 @@ next-env.d.ts
 /neurosense-site-*.tar.gz
 /.dev.vars
 *.tsbuildinfo
+
+/dist-pages/

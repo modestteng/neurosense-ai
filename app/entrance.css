@@ -20,7 +20,7 @@ body { margin: 0; }
   position: absolute;
   z-index: -2;
   inset: 0;
-  background: #080d14 url('/neurosense-horizon.png') center 68% / cover no-repeat;
+  background: #080d14 url('../public/neurosense-horizon.png') center 68% / cover no-repeat;
 }
 .entrance-scene::after {
   content: '';
