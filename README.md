@@ -8,7 +8,7 @@
 - 工作区：https://modestteng.github.io/neurosense-ai/explore/
 - 公开源码：https://github.com/modestteng/neurosense-ai
 
-展示版完全在浏览器内运行，提供交互演示、模拟状态图表、摄像头本地预览、会话导出与 PDF/TXT/Markdown 文字提取；不提供 DeepSeek 在线生成和服务端 API。状态与回答的演示逻辑复用现有模块。页面、脚本、图片和 PDF Worker 均由本站提供，字体使用本机系统字体，不依赖 Google Fonts 或外部 CDN。浏览器语音识别仍取决于浏览器厂商服务和网络支持。
+网页由 GitHub Pages 托管，提供交互演示、模拟状态图表、摄像头本地预览、会话导出与 PDF/TXT/Markdown 文字提取。真实问答通过 Cloudflare Workers 聊天后端调用 DeepSeek，检测到服务可用后默认选择在线生成，也可在设置中选择本地演示。状态与回答的演示逻辑复用现有模块。页面、脚本、图片和 PDF Worker 均由本站提供，字体使用本机系统字体，不依赖 Google Fonts 或外部 CDN。浏览器语音识别仍取决于浏览器厂商服务和网络支持。
 
 ```powershell
 npm ci
@@ -21,7 +21,7 @@ GitHub Pages 使用 `/neurosense-ai/` 子路径，首页与 `explore/index.html`
 
 更新网站时，先提交源码并推送到 `main`，再运行 `npm run deploy:pages`。此命令会重新构建并通过 `gh-pages` 工具推送网页，GitHub 随后自动发布。首次在另一台电脑使用时，先完成 GitHub 登录（`gh auth login`、`gh auth setup-git`）。不需要购买服务器或填写额外托管平台密钥。
 
-国内访问速度与可达性取决于运营商和当地网络，GitHub Pages 不提供中国大陆访问保证。此部署不需要另租服务器。
+国内访问速度与可达性取决于运营商和当地网络，GitHub Pages 与后端的 workers.dev 域名均不保证中国大陆稳定直连。此部署不需要另租服务器。
 
 ## 完整服务的本地运行
 
@@ -48,11 +48,15 @@ npm run dev
 
 ## 真实生成
 
+独立聊天后端入口为 `worker/chat.ts`，通过 `wrangler.chat.jsonc` 配置；它复用现有 `app/api/chat/route.ts`，不复制状态分析、融合和回答策略。只允许本项目 GitHub Pages 所在源的浏览器跨域请求，并配置每 IP、每 Cloudflare 节点每分钟 10 次请求限制。这是公开演示接口，来源检查与限流不等同于用户认证或全局费用上限。
+
+本地密钥放在被 Git 忽略的 `.dev.vars`，变量名为 `DEEPSEEK_API_KEY`。`npm run dev:api` 启动本地接口；完成 Cloudflare 登录后，`npm run deploy:api` 将代码和密钥上传至后端，密钥作为 Secret 保存。把部署返回的 `/api/chat` 地址写到 `pages/config.ts` 的 `CHAT_API_URL`，再运行 `npm run deploy:pages`，网页即可调用后端。该地址为空时保持纯本地演示；后端已配置时网页自动选择在线生成，在线请求失败会显示错误，不冒充真实回答。
+
 完整服务通过服务端环境变量设置 `DEEPSEEK_API_KEY`，`DEEPSEEK_MODEL` 默认为 `deepseek-v4-flash`。本地 Cloudflare 调试使用未跟踪的 `.dev.vars`（键名同 `.env.example`）；FastAPI 示例使用操作系统环境变量。禁止将密钥放到任何 `NEXT_PUBLIC_` 变量或客户端代码。
 
 前端从 `GET /api/chat` 查询是否配置，通过 `POST /api/chat` 请求生成。后端校验输入、重算融合和策略、优先执行安全规则，再请求 DeepSeek。失败不会偷偷退回模拟并冒充真实回答。调用格式参考 [DeepSeek 官方接口文档](https://api-docs.deepseek.com/api/create-chat-completion/)。
 
-GitHub Pages 展示版使用本地演示，不配置生产密钥。配置密钥代表开放站点访客可能产生用量，请在正式开放真实生成前配置访问控制和部署层限流；当前仅有单实例每分钟请求限制，不能替代分布式配额。
+GitHub Pages 不保存生产密钥，真实生成密钥仅保存在本地被忽略的配置与 Cloudflare 后端 Secret 中。访客的在线问答会消耗 DeepSeek 用量；当前的节点限流不能替代全局费用配额。
 
 ## 技术边界与扩展
 

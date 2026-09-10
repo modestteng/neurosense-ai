@@ -6,6 +6,8 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "dev:api": "wrangler dev --config wrangler.chat.jsonc --local --port 8791",
+    "deploy:api": "wrangler deploy --config wrangler.chat.jsonc --secrets-file .dev.vars",
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",

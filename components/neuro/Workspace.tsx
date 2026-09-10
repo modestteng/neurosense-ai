@@ -23,7 +23,7 @@ const demoSteps=[{label:'正常提问',text:'为什么 GCN 需要邻接矩阵？
 export const percent=(n:number)=>Math.round(n*100);
 export function Meter({label,value,warn=false}:{label:string;value:number;warn?:boolean}){return <div className="meter"><span>{label}</span><div><i style={{width:`${percent(value)}%`}} className={warn?'warn':''}/></div><b>{percent(value)}<small>%</small></b></div>}
 
-export default function Workspace({staticDemo=false}:{staticDemo?:boolean}){
+export default function Workspace({staticDemo=false,chatApiUrl='/api/chat',preferLive=false}:{staticDemo?:boolean;chatApiUrl?:string;preferLive?:boolean}){
   const [view,setView]=useState('workspace');
   const [scene,setScene]=useState<Scene>('学习'),[detected,setDetected]=useState<Scene>('办公'),[manual,setManual]=useState(true);
   const activeScene=manual?scene:detected;
@@ -46,7 +46,7 @@ export default function Workspace({staticDemo=false}:{staticDemo?:boolean}){
   const sessionTurns=useMemo(()=>mergeSessionTurns(archivedTurns,turns),[archivedTurns,turns]);
   const archiveConversation=()=>setArchivedTurns(previous=>mergeSessionTurns(previous,turns));
   const log=(label:string,detail:string)=>setEvents(v=>[{id:crypto.randomUUID(),time:new Date().toLocaleTimeString('zh-CN',{hour12:false}),label,detail},...v].slice(0,100));
-  useEffect(()=>{if(staticDemo){setConfigured(false);setServiceChecked(true);}else fetch('/api/chat').then(r=>r.ok?r.json():Promise.reject()).then(data=>setConfigured((data as {configured?:boolean}).configured===true)).catch(()=>setConfigured(false)).finally(()=>setServiceChecked(true));return()=>{abort.current?.abort();recognition.current?.cancel();window.speechSynthesis?.cancel()}},[]);
+  useEffect(()=>{if(staticDemo){setConfigured(false);setServiceChecked(true);}else fetch(chatApiUrl).then(r=>r.ok?r.json():Promise.reject()).then(data=>{const available=(data as {configured?:boolean}).configured===true;setConfigured(available);if(preferLive&&available)setMode('live')}).catch(()=>setConfigured(false)).finally(()=>setServiceChecked(true));return()=>{abort.current?.abort();recognition.current?.cancel();window.speechSynthesis?.cancel()}},[staticDemo,chatApiUrl,preferLive]);
   useEffect(()=>{const hide=()=>{if(document.hidden){recognition.current?.cancel();setVoiceStatus({phase:'idle',message:''})}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide)},[]);
   useEffect(()=>{if(!streaming)return;const timer=setInterval(()=>setWindowIndex(i=>i+1),3000);return()=>clearInterval(timer)},[streaming]);
   useEffect(()=>{setPoints(old=>[...old,{time:Date.now(),value:snapshot.eeg.negative,state:scenario}].filter(p=>Date.now()-p.time<=60000).slice(-40))},[windowIndex,scenario]);
@@ -64,7 +64,7 @@ export default function Workspace({staticDemo=false}:{staticDemo?:boolean}){
       let reply:Reply;
       if(staticDemo||mode==='demo'||forceDemo)reply=demoReply(text,targetScene,nextSnapshot,nextPolicy,latest?.reply.topic??'other',docs);
       else{
-        const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({message:text,mode,scene:targetScene,scenario:next,preference,topic:latest?.reply.topic??'other',history:turns.slice(-6).flatMap(t=>[{role:'user',content:t.question},{role:'assistant',content:t.reply.text}]),knowledge:retrieve(text,docs).map((d,i)=>({id:String(i),name:d.name,text:d.text}))})});
+        const response=await fetch(chatApiUrl,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({message:text,mode,scene:targetScene,scenario:next,preference,topic:latest?.reply.topic??'other',history:turns.slice(-6).flatMap(t=>[{role:'user',content:t.question},{role:'assistant',content:t.reply.text}]),knowledge:retrieve(text,docs).map((d,i)=>({id:String(i),name:d.name,text:d.text}))})});
         const data=await response.json() as {error?:string;reply:Reply};if(!response.ok)throw new Error(data.error||'生成失败，请稍后重试。');reply=data.reply;
       }
       if(controller.signal.aborted)return;

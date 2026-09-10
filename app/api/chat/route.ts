@@ -7,7 +7,7 @@ export async function GET(){return Response.json({configured:Boolean(runtime().D
 export async function POST(request:Request){
   try {
     const origin=request.headers.get('origin');
-    if(origin&&origin!==new URL(request.url).origin)return Response.json({error:'请求来源不匹配。'},{status:403});
+    if(origin&&origin!==new URL(request.url).origin&&origin!==runtime().ALLOWED_ORIGIN)return Response.json({error:'请求来源不匹配。'},{status:403});
     if(Number(request.headers.get('content-length'))>100000)return Response.json({error:'请求过大，请减少资料内容。'},{status:413});
     const raw=await request.text();if(raw.length>100000)return Response.json({error:'请求过大。'},{status:413});
     let body;try {body=JSON.parse(raw);} catch {return Response.json({error:'请求必须为有效 JSON。'},{status:400});}
